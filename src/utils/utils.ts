@@ -7,6 +7,14 @@ const reg = /(((^https?:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+(?::\d+)?|(
 
 export const isUrl = (path: string): boolean => reg.test(path);
 
+export function isEmptyObject(object = {}) {
+  return Object.keys(object).length <= 0;
+}
+
+export function isSuccess({ code = '200' }) {
+  return code == 'SUCCESS' || code == '200'; // eslint-disable-line
+}
+
 export const isAntDesignPro = (): boolean => {
   if (ANT_DESIGN_PRO_ONLY_DO_NOT_USE_IN_YOUR_PRODUCTION === 'site') {
     return true;

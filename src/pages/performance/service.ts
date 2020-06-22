@@ -1,4 +1,4 @@
-import request from '@/utils/request';
+import request, {post} from '@/utils/request';
 import { TableListParams, TableListItem } from './data.d';
 
 export async function queryRule(params?: TableListParams) {
@@ -6,6 +6,9 @@ export async function queryRule(params?: TableListParams) {
     params,
   });
 }
+
+const performanceList = 'performance/list'
+export const queryPerformanceList = (params : any) => post(performanceList, params);
 
 export async function removeRule(params: { key: number[] }) {
   return request('/api/rule', {

@@ -4,7 +4,6 @@ import {
   Avatar,
   Button,
   Card,
-  Col,
   Dropdown,
   Input,
   List,
@@ -12,7 +11,6 @@ import {
   Modal,
   Progress,
   Radio,
-  Row,
 } from 'antd';
 
 import { findDOMNode } from 'react-dom';
@@ -28,23 +26,12 @@ const RadioButton = Radio.Button;
 const RadioGroup = Radio.Group;
 const { Search } = Input;
 
-interface ListBasicListProps {
-  listBasicList: StateType;
+interface ListProjectApiListProps {
+  listProjectApiList: StateType;
+  // @ts-ignore
   dispatch: Dispatch<any>;
   loading: boolean;
 }
-
-const Info: FC<{
-  title: React.ReactNode;
-  value: React.ReactNode;
-  bordered?: boolean;
-}> = ({ title, value, bordered }) => (
-  <div className={styles.headerInfo}>
-    <span>{title}</span>
-    <p>{value}</p>
-    {bordered && <em />}
-  </div>
-);
 
 const ListContent = ({
   data: { owner, createdAt, percent, status },
@@ -66,12 +53,12 @@ const ListContent = ({
   </div>
 );
 
-export const ListBasicList: FC<ListBasicListProps> = (props) => {
+export const ListProjectApiList: FC<ListProjectApiListProps> = (props) => {
   const addBtn = useRef(null);
   const {
     loading,
     dispatch,
-    listBasicList: { list },
+    listProjectApiList: { list },
   } = props;
   const [done, setDone] = useState<boolean>(false);
   const [visible, setVisible] = useState<boolean>(false);
@@ -79,7 +66,7 @@ export const ListBasicList: FC<ListBasicListProps> = (props) => {
 
   useEffect(() => {
     dispatch({
-      type: 'listBasicList/fetch',
+      type: 'listProjectApiList/fetch',
       payload: {
         count: 5,
       },
@@ -187,19 +174,6 @@ export const ListBasicList: FC<ListBasicListProps> = (props) => {
     <div>
       <PageHeaderWrapper>
         <div className={styles.standardList}>
-          <Card bordered={false}>
-            <Row>
-              <Col sm={8} xs={24}>
-                <Info title="我的待办" value="8个任务" bordered />
-              </Col>
-              <Col sm={8} xs={24}>
-                <Info title="本周任务平均处理时间" value="32分钟" bordered />
-              </Col>
-              <Col sm={8} xs={24}>
-                <Info title="本周完成任务数" value="24个任务" />
-              </Col>
-            </Row>
-          </Card>
 
           <Card
             className={styles.listCard}
@@ -241,9 +215,9 @@ export const ListBasicList: FC<ListBasicListProps> = (props) => {
                   ]}
                 >
                   <List.Item.Meta
-                    avatar={<Avatar src={item.logo} shape="square" size="large" />}
-                    title={<a href={item.href}>{item.title}</a>}
-                    description={item.subDescription}
+                    avatar={<Avatar src={item.name} shape="square" size="large" />}
+                    title={<a href={item.id}>{item.name}</a>}
+                    description={item.uuid}
                   />
                   <ListContent data={item} />
                 </List.Item>
@@ -267,15 +241,15 @@ export const ListBasicList: FC<ListBasicListProps> = (props) => {
 
 export default connect(
   ({
-    listBasicList,
+     listProjectApiList,
     loading,
   }: {
-    listBasicList: StateType;
+    listProjectApiList: StateType;
     loading: {
       models: { [key: string]: boolean };
     };
   }) => ({
-    listBasicList,
-    loading: loading.models.listBasicList,
+    listProjectApiList,
+    loading: loading.models.listProjectApiList,
   }),
-)(ListBasicList);
+)(ListProjectApiList);

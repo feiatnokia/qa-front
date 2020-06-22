@@ -1,9 +1,7 @@
-/**
- * request 网络请求工具
- * 更详细的 api 文档: https://github.com/umijs/umi-request
- */
-import { extend } from 'umi-request';
-import { notification } from 'antd';
+import fetch from 'dva/fetch';
+import { stringify } from 'qs';
+import cloneDeepWith from 'lodash/cloneDeepWith';
+import { isEmptyObject, isSuccess } from '@/utils/utils';
 
 const codeMessage = {
   200: '服务器成功返回请求的数据。',
@@ -23,34 +21,193 @@ const codeMessage = {
   504: '网关超时。',
 };
 
-/**
- * 异常处理程序
- */
-const errorHandler = (error: { response: Response }): Response => {
-  const { response } = error;
-  if (response && response.status) {
-    const errorText = codeMessage[response.status] || response.statusText;
-    const { status, url } = response;
-
-    notification.error({
-      message: `请求错误 ${status}: ${url}`,
-      description: errorText,
-    });
-  } else if (!response) {
-    notification.error({
-      description: '您的网络发生异常，无法连接服务器',
-      message: '网络异常',
-    });
+const checkStatus = (response : any) => {
+  if (response.status >= 200 && response.status < 300) {
+    return response;
   }
-  return response;
+
+  if (response.status === 401) {
+    // eslint-disable-next-line no-underscore-dangle
+    // router.push('/user/login');
+  }
+
+  if (response.status === 403) {
+    // store.dispatch(routerRedux.push('/exception/403'));
+  }
+
+  if (response.status <= 504 && response.status >= 500) {
+    // store.dispatch(routerRedux.push('/exception/500'));
+  }
+
+  if (response.status >= 404 && response.status < 422) {
+    // store.dispatch(routerRedux.push('/exception/404'));
+  }
+
+  const errortext = codeMessage[response.status] || response.statusText;
+  const error : any = new Error(errortext);
+  error.response = response;
+  throw error;
+};
+
+const checkSuccess = (data : any) => {
+  if (typeof data === 'string') {
+    return data;
+  }
+
+  if (isSuccess(data)) {
+    return data;
+  }
+
+  const error : any = new Error(data.message);
+  error.data = data;
+  throw error;
+};
+
+const throwError = (err : any) => {
+  throw err;
+};
+
+const trim = (value : any) => {
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+  return value;
+};
+
+const createUrl = (url : string, params : any) => {
+  const reg = /\/:(\w+)/;
+  let match = reg.exec(url) || [];
+  let colon = match[0];
+  let param = match[1];
+  let targetUrl = url;
+  const undealParams = { ...cloneDeepWith(params, trim) };
+  while (param && params) {
+    if (params[param]) {
+      targetUrl = url.replace(colon, `/${params[param]}`);
+      delete undealParams[param];
+    } else {
+      break;
+    }
+    match = reg.exec(targetUrl) || [];
+    colon = match[0]; // eslint-disable-line
+    param = match[1]; // eslint-disable-line
+  }
+
+  return { url: targetUrl, params: undealParams || {} };
+};
+
+const setServerUrl = (url : string) => {
+  const baseUrl = 'http://localhost:8081/qa/'
+  return baseUrl + url;
 };
 
 /**
- * 配置request请求时的默认参数
+ * Requests a URL, returning a promise.
+ *
+ * @param  {string} url       The URL we want to request
+ * @param  {object} [options] The options we want to pass to "fetch"
+ * @return {object}           An object containing either "data" or "err"
  */
-const request = extend({
-  errorHandler, // 默认错误处理
-  credentials: 'include', // 默认请求是否带上cookie
-});
+const request = (url : string, options : any) => {
+  const defaultOptions = {
+    credentials: 'include',
+    headers: {
+      Authorization: 'auth',
+      // Authorization: `Bearer ${localStorage.token}`,
+    },
+  };
+  const newOptions = { ...defaultOptions, ...options };
+  if (
+    newOptions.method === 'POST' ||
+    newOptions.method === 'PUT' ||
+    newOptions.method === 'DELETE'
+  ) {
+    if (!(newOptions.body instanceof FormData)) {
+      newOptions.headers = {
+        Accept: 'application/json',
+        'Content-Type': 'application/json; charset=utf-8',
+        ...newOptions.headers,
+      };
+      newOptions.body = JSON.stringify(newOptions.body);
+    } else {
+      // newOptions.body is FormData
+      newOptions.headers = {
+        Accept: 'application/json',
+        ...newOptions.headers,
+      };
+    }
+  }
+
+  return fetch(setServerUrl(url), newOptions)
+    .then(checkStatus)
+    .then(response => {
+      // if (newOptions.method === 'DELETE' || response.status === 204) {
+      //   return response.text();
+      // }
+      return response.json();
+    })
+    .then(checkSuccess)
+    .catch(throwError);
+};
+
+/**
+ *
+ * @param {String} url
+ * @param {Object} params 包含query参数以及:开头的参数
+ * @param {Object} options
+ */
+export const get = (url : string, params = {}, options = {}) => {
+  const { url: realUrl, params: data } = createUrl(url, params);
+  const queryString = isEmptyObject(data) ? '' : `?${stringify(data)}`;
+  return request(`${realUrl}${queryString}`, {
+    ...options,
+    method: 'GET',
+  });
+};
+
+/**
+ *
+ * @param {String} url
+ * @param {Object} data 包含body数据及:开头的参数
+ * @param {Object} options
+ */
+export const post = (url : string, data = {}, options = {}) => {
+  const { url: realUrl, params: body } = createUrl(url, data);
+  return request(realUrl, {
+    ...options,
+    method: 'POST',
+    body,
+  });
+};
+
+/**
+ *
+ * @param {String} url
+ * @param {Object} data 包含body数据及:开头的参数
+ * @param {Object} options
+ */
+export const $delete = (url : string, data = {}, options = {}) => {
+  const { url: realUrl, params: body } = createUrl(url, data);
+  return request(realUrl, {
+    ...options,
+    method: 'DELETE',
+    body,
+  });
+};
+
+/**
+ *
+ * @param {String} url
+ * @param {Object} data 包含body数据及:开头的参数
+ * @param {Object} options
+ */
+export const $put = (url : string, data = {}, options = {}) => {
+  const { url: realUrl, params: body } = createUrl(url, data);
+  return request(realUrl, {
+    ...options,
+    method: 'PUT',
+    body,
+  });
+};
 
 export default request;

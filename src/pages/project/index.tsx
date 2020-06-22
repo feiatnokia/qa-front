@@ -10,71 +10,47 @@ import styles from './style.less';
 
 const { Paragraph } = Typography;
 
-interface ListCardListProps {
-  listCardList: StateType;
-  dispatch: Dispatch<any>;
+interface ListProjectListProps {
+  listProjectList: StateType;
+  dispatch: Dispatch;
   loading: boolean;
 }
-interface ListCardListState {
+interface ListProjectListState {
   visible: boolean;
   done: boolean;
   current?: Partial<CardListItemDataType>;
 }
 
-class ListCardList extends Component<
-  ListCardListProps,
-  ListCardListState
-> {
+class ListProjectList extends Component<ListProjectListProps, ListProjectListState> {
   componentDidMount() {
     const { dispatch } = this.props;
     dispatch({
-      type: 'listCardList/fetch',
+      type: 'listProjectList/fetch',
       payload: {
-        count: 8,
+        total: '100',
+        pageSize: '20',
+        current: '1',
       },
     });
   }
 
   render() {
     const {
-      listCardList: { list },
+      listProjectList: { list },
       loading,
     } = this.props;
-
-    const content = (
-      <div className={styles.pageHeaderContent}>
-        <p>
-          段落示意：蚂蚁金服务设计平台 ant.design，用最小的工作量，无缝接入蚂蚁金服生态，
-          提供跨越设计与开发的体验解决方案。
-        </p>
-        <div className={styles.contentLink}>
-          <a>
-            <img alt="" src="https://gw.alipayobjects.com/zos/rmsportal/MjEImQtenlyueSmVEfUD.svg" />{' '}
-            快速开始
-          </a>
-          <a>
-            <img alt="" src="https://gw.alipayobjects.com/zos/rmsportal/NbuDUAuBlIApFuDvWiND.svg" />{' '}
-            产品简介
-          </a>
-          <a>
-            <img alt="" src="https://gw.alipayobjects.com/zos/rmsportal/ohOEPSYdDTNnyMbGuyLb.svg" />{' '}
-            产品文档
-          </a>
-        </div>
-      </div>
-    );
-
+    console.log(this.props.listProjectList)
     const extraContent = (
       <div className={styles.extraImg}>
         <img
-          alt="这是一个标题"
+          alt="标题pic"
           src="https://gw.alipayobjects.com/zos/rmsportal/RzwpdLnhmvDJToTdfDPe.png"
         />
       </div>
     );
     const nullData: Partial<CardListItemDataType> = {};
     return (
-      <PageHeaderWrapper content={content} extraContent={extraContent}>
+      <PageHeaderWrapper extraContent={extraContent}>
         <div className={styles.cardList}>
           <List<Partial<CardListItemDataType>>
             rowKey="id"
@@ -88,14 +64,14 @@ class ListCardList extends Component<
                     <Card
                       hoverable
                       className={styles.card}
-                      actions={[<a key="option1">操作一</a>, <a key="option2">操作二</a>]}
+                      actions={[<a key="option1">编辑</a>, <a key="option2">查看</a>]}
                     >
                       <Card.Meta
                         avatar={<img alt="" className={styles.cardAvatar} src={item.avatar} />}
-                        title={<a>{item.title}</a>}
+                        title={<a>{item.projectName}</a>}
                         description={
                           <Paragraph className={styles.item} ellipsis={{ rows: 3 }}>
-                            {item.description}
+                            {item.projectNo}
                           </Paragraph>
                         }
                       />
@@ -120,15 +96,15 @@ class ListCardList extends Component<
 
 export default connect(
   ({
-    listCardList,
+    listProjectList,
     loading,
   }: {
-    listCardList: StateType;
+    listProjectList: StateType;
     loading: {
       models: { [key: string]: boolean };
     };
   }) => ({
-    listCardList,
-    loading: loading.models.listCardList,
+    listProjectList,
+    loading: loading.models.listProjectList,
   }),
-)(ListCardList);
+)(ListProjectList);

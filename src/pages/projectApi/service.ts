@@ -1,6 +1,8 @@
 import request from 'umi-request';
 import { BasicListItemDataType } from './data.d';
+import {post} from "@/utils/request";
 
+const projectApiList = 'project/api/list'
 interface ParamsType extends Partial<BasicListItemDataType> {
   count?: number;
 }
@@ -10,6 +12,7 @@ export async function queryFakeList(params: ParamsType) {
     params,
   });
 }
+export const queryProjectApiList = (params : string) => post(projectApiList, params);
 
 export async function removeFakeList(params: ParamsType) {
   const { count = 5, ...restParams } = params;

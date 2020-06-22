@@ -1,5 +1,5 @@
 import { Effect, Reducer } from 'umi';
-import { addFakeList, queryFakeList, removeFakeList, updateFakeList } from './service';
+import { addFakeList, queryFakeList, queryProjectApiList, removeFakeList, updateFakeList } from './service';
 
 import { BasicListItemDataType } from './data.d';
 
@@ -16,13 +16,13 @@ export interface ModelType {
     submit: Effect;
   };
   reducers: {
-    queryList: Reducer<StateType>;
+    queryProjectApiList: Reducer<StateType>;
     appendList: Reducer<StateType>;
   };
 }
 
 const Model: ModelType = {
-  namespace: 'listBasicList',
+  namespace: 'listProjectApiList',
 
   state: {
     list: [],
@@ -30,17 +30,17 @@ const Model: ModelType = {
 
   effects: {
     *fetch({ payload }, { call, put }) {
-      const response = yield call(queryFakeList, payload);
+      const response = yield call(queryProjectApiList, payload);
       yield put({
-        type: 'queryList',
-        payload: Array.isArray(response) ? response : [],
+        type: 'queryProjectApiList',
+        payload: Array.isArray(response.data.list) ? response.data.list : [],
       });
     },
     *appendFetch({ payload }, { call, put }) {
       const response = yield call(queryFakeList, payload);
       yield put({
         type: 'appendList',
-        payload: Array.isArray(response) ? response : [],
+        payload: Array.isArray(response.data.list) ? response.data.list : [],
       });
     },
     *submit({ payload }, { call, put }) {
@@ -52,14 +52,14 @@ const Model: ModelType = {
       }
       const response = yield call(callback, payload); // post
       yield put({
-        type: 'queryList',
+        type: 'queryProjectApiList',
         payload: response,
       });
     },
   },
 
   reducers: {
-    queryList(state, action) {
+    queryProjectApiList(state, action) {
       return {
         ...state,
         list: action.payload,
